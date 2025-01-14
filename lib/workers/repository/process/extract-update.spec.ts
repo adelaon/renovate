@@ -132,6 +132,7 @@ describe('workers/repository/process/extract-update', () => {
       const config = {
         repoIsOnboarded: true,
         osvVulnerabilityAlerts: true,
+        containerVulnerabilityAlerts: true,
       };
       const appendVulnerabilityPackageRulesMock = jest.fn();
       createVulnerabilitiesMock.mockResolvedValueOnce({
