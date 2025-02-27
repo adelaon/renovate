@@ -36,11 +36,11 @@ importers:
         specifier: 0.20.11
         version: 0.20.11
       '@mintmaker/osv-offline':
-        specifier: 1.0.0
-        version: 1.0.0(encoding@0.1.13)
+        specifier: 1.1.1
+        version: 1.1.1(encoding@0.1.13)
       '@mintmaker/osv-offline-db':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: 1.2.0
+        version: 1.2.0
       '@opentelemetry/api':
         specifier: 1.9.0
         version: 1.9.0
@@ -1187,11 +1187,11 @@ packages:
     os: [darwin, linux, win32]
     hasBin: true
 
-  '@mintmaker/osv-offline-db@1.0.0':
-    resolution: {integrity: sha512-xLKwm+LFx9v5bbLIJWn4bU10/uNe5/DVeBWmJ9J3qAqZ2daFBD/RKyT6vVptVEGJ6Tcwic2QSQctaFi5GxaCRw==}
+  '@mintmaker/osv-offline-db@1.2.0':
+    resolution: {integrity: sha512-ylED2Xr/fAq4Qc4W6MTT7EjSqmLsRYdZwQ+iXVQ6YxYg9jcdGpSzzT3W5GXuGdZM9Ls8axM0mzr5MidLZHV3KQ==}
 
-  '@mintmaker/osv-offline@1.0.0':
-    resolution: {integrity: sha512-YBpdS1EeoYVQpCYo3bZG2RoHWdoPN4uDePYy+pwaFCvqjV1cBNOMAyhghne9+/eo+7atWExSPXv4Jv/JwNDJPA==}
+  '@mintmaker/osv-offline@1.1.1':
+    resolution: {integrity: sha512-2gL3Y0SdZ/hA/YzTIDF3Huf58RvTVvbTevUgz2hM3bpfXL27lQstBcOe26TIWY0T9vYMxdNa2zAf9/RrQtjkbw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -7730,13 +7730,13 @@ snapshots:
 
   '@ls-lint/ls-lint@2.2.3': {}
 
-  '@mintmaker/osv-offline-db@1.0.0':
+  '@mintmaker/osv-offline-db@1.2.0':
     dependencies:
       '@seald-io/nedb': 4.0.4
 
-  '@mintmaker/osv-offline@1.0.0(encoding@0.1.13)':
+  '@mintmaker/osv-offline@1.1.1(encoding@0.1.13)':
     dependencies:
-      '@mintmaker/osv-offline-db': 1.0.0
+      '@mintmaker/osv-offline-db': 1.2.0
       '@octokit/rest': 20.1.1
       adm-zip: 0.5.16
       fs-extra: 11.3.0
