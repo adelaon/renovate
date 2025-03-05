@@ -1,12 +1,6 @@
 import { TEMPORARY_ERROR } from '../../../constants/error-messages';
 import { logger } from '../../../logger';
-import { exec } from '../../../util/exec';
-import type { ExecOptions } from '../../../util/exec/types';
-import {
-  deleteLocalFile,
-  getSiblingFileName,
-  readLocalFile,
-} from '../../../util/fs';
+import { deleteLocalFile, readLocalFile } from '../../../util/fs';
 import type { UpdateArtifact, UpdateArtifactsResult } from '../types';
 
 export async function updateArtifacts({
@@ -16,56 +10,30 @@ export async function updateArtifacts({
   config,
 }: UpdateArtifact): Promise<UpdateArtifactsResult[] | null> {
   logger.debug(`rpm.updateArtifacts(${packageFileName})`);
-  const isLockFileMaintenance = config.updateType === 'lockFileMaintenance';
+  const outputName = 'rpms.lock.tmp.yaml';
 
-  if (!isLockFileMaintenance) {
-    logger.debug('Must be in lockFileMaintenance for rpm manager');
-    return null;
-  }
+  logger.debug(`RPM lock file: ${packageFileName}`);
 
-  const extension = packageFileName.split('.').pop();
-  const lockFileName = getSiblingFileName(
-    packageFileName,
-    `rpms.lock.${extension}`,
-  );
+  const existingLockFileContent = await readLocalFile(packageFileName, 'utf8');
 
-  logger.debug(`RPM lock file: ${lockFileName}`);
-
-  const existingLockFileContent = await readLocalFile(lockFileName, 'utf8');
-
-  logger.debug(`Updating ${lockFileName}`);
-
-  const cmd: string[] = [];
+  logger.debug(`Updating ${packageFileName}`);
 
   try {
-    await deleteLocalFile(lockFileName);
-
-    cmd.push(
-      `rpm-lockfile-prototype ${packageFileName} --outfile ${lockFileName}`,
-    );
-
-    // Do not set cwdFile in ExecOptions, because packageFileName
-    // and lockFileName already contain the (optional) subfolder.
-    // Setting cwdFile would descend into that subfolder and
-    // we'd have it set twice.
-    const execOptions: ExecOptions = {};
-
-    await exec(cmd, execOptions);
-
-    const newLockFileContent = await readLocalFile(lockFileName, 'utf8');
+    await deleteLocalFile(packageFileName);
+    const newLockFileContent = await readLocalFile(outputName, 'utf8');
 
     if (existingLockFileContent === newLockFileContent) {
-      logger.debug(`${lockFileName} is unchanged`);
+      logger.debug(`${packageFileName} is unchanged`);
       return null;
     }
 
-    logger.debug(`Returning updated ${lockFileName}`);
+    logger.debug(`Returning updated ${packageFileName}`);
 
     return [
       {
         file: {
           type: 'addition',
-          path: lockFileName,
+          path: packageFileName,
           contents: newLockFileContent,
         },
       },
@@ -74,11 +42,11 @@ export async function updateArtifacts({
     if (err.message === TEMPORARY_ERROR) {
       throw err;
     }
-    logger.debug({ err }, `Failed to update ${lockFileName} file`);
+    logger.debug({ err }, `Failed to update ${packageFileName} file`);
     return [
       {
         artifactError: {
-          lockFile: lockFileName,
+          fileName: packageFileName,
           stderr: `${String(err.stdout)}\n${String(err.stderr)}`,
         },
       },
