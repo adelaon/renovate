@@ -257,7 +257,7 @@ export async function lookup(
   await fetchUpdates(config, packageFiles);
   await fetchContainerVulnerabilities(config, packageFiles);
   await fetchRpmVulnerabilities(config, packageFiles);
-  calculateLibYears(packageFiles);
+  calculateLibYears(config, packageFiles);
   const { branches, branchList } = await branchifyUpgrades(
     config,
     packageFiles,
@@ -275,7 +275,6 @@ export async function update(
   branches: BranchConfig[],
 ): Promise<WriteUpdateResult | undefined> {
   let res: WriteUpdateResult | undefined;
-  // istanbul ignore else
   if (config.repoIsOnboarded) {
     res = await writeUpdates(config, branches);
   }
