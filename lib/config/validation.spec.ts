@@ -1,11 +1,8 @@
-import { getManagerList } from '../modules/manager';
 import { configFileNames } from './app-strings';
 import { GlobalConfig } from './global';
 import type { RenovateConfig } from './types';
 import * as configValidation from './validation';
 import { partial } from '~test/util';
-
-const managerList = getManagerList().sort();
 
 describe('config/validation', () => {
   describe('validateConfig(config)', () => {
@@ -19,6 +16,20 @@ describe('config/validation', () => {
       );
       expect(warnings).toHaveLength(1);
       expect(warnings).toMatchSnapshot();
+    });
+
+    it('allow enabled field in vulnerabilityAlerts', async () => {
+      const config = {
+        vulnerabilityAlerts: {
+          enabled: false,
+        },
+      };
+      const { errors, warnings } = await configValidation.validateConfig(
+        'repo',
+        config,
+      );
+      expect(errors).toHaveLength(0);
+      expect(warnings).toHaveLength(0);
     });
 
     it('catches global options in repo config', async () => {
@@ -231,7 +242,7 @@ describe('config/validation', () => {
 
     it('validates matchBaseBranches', async () => {
       const config = {
-        baseBranches: ['foo'],
+        baseBranchPatterns: ['foo'],
         packageRules: [
           {
             matchBaseBranches: ['foo'],
@@ -247,7 +258,7 @@ describe('config/validation', () => {
       expect(warnings).toHaveLength(0);
     });
 
-    it('catches invalid matchBaseBranches when baseBranches is not defined', async () => {
+    it('catches invalid matchBaseBranches when baseBranchPatterns is not defined', async () => {
       const config = {
         packageRules: [
           {
@@ -375,15 +386,15 @@ describe('config/validation', () => {
       ]);
     });
 
-    it('catches invalid baseBranches regex', async () => {
+    it('catches invalid baseBranchPatterns regex', async () => {
       const config = {
-        baseBranches: ['/***$}{]][/', '/branch/i'],
+        baseBranchPatterns: ['/***$}{]][/', '/branch/i'],
       };
       const { errors } = await configValidation.validateConfig('repo', config);
       expect(errors).toEqual([
         {
           topic: 'Configuration Error',
-          message: 'Invalid regExp for baseBranches: `/***$}{]][/`',
+          message: 'Invalid regExp for baseBranchPatterns: `/***$}{]][/`',
         },
       ]);
     });
@@ -417,24 +428,6 @@ describe('config/validation', () => {
       expect(errors).toMatchSnapshot();
     });
 
-    it('included unsupported manager', async () => {
-      const config = {
-        packageRules: [
-          {
-            matchManagers: ['foo'],
-            enabled: true,
-          },
-        ],
-      };
-      const { warnings, errors } = await configValidation.validateConfig(
-        'repo',
-        config,
-      );
-      expect(warnings).toHaveLength(0);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].message).toContain('ansible');
-    });
-
     it('included managers of the wrong type', async () => {
       const config = {
         packageRules: [
@@ -449,7 +442,7 @@ describe('config/validation', () => {
         config as any,
       );
       expect(warnings).toHaveLength(0);
-      expect(errors).toHaveLength(2);
+      expect(errors).toHaveLength(1);
       expect(errors).toMatchSnapshot();
     });
 
@@ -1102,7 +1095,20 @@ describe('config/validation', () => {
 
       expect(errors).toHaveLength(0);
       expect(warnings).toHaveLength(2);
-      expect(warnings).toMatchSnapshot();
+      expect(warnings).toEqual([
+        {
+          topic: 'managerFilePatterns',
+          message: expect.toStartWith(
+            `"managerFilePatterns" can't be used in ".". Allowed objects: `,
+          ),
+        },
+        {
+          topic: 'npm.minor.managerFilePatterns',
+          message: expect.toStartWith(
+            `"managerFilePatterns" can't be used in "minor". Allowed objects: `,
+          ),
+        },
+      ]);
     });
 
     it('errors if manager objects are nested', async () => {
@@ -1767,7 +1773,9 @@ describe('config/validation', () => {
           },
           {
             topic: 'managerFilePatterns',
-            message: `managerFilePatterns should only be configured within one of "${managerList.join(' or ')} or customManagers" objects. Was found in .`,
+            message: expect.toStartWith(
+              `"managerFilePatterns" can't be used in ".". Allowed objects: `,
+            ),
           },
         ]);
       });
@@ -1790,7 +1798,9 @@ describe('config/validation', () => {
         expect(warnings).toEqual([
           {
             topic: 'managerFilePatterns',
-            message: `managerFilePatterns should only be configured within one of "${managerList.join(' or ')} or customManagers" objects. Was found in .`,
+            message: expect.toStartWith(
+              `"managerFilePatterns" can't be used in ".". Allowed objects: `,
+            ),
           },
         ]);
       });
