@@ -11,6 +11,7 @@ import { scm } from '../../../../modules/platform/scm';
 import type { BranchConfig } from '../../../types';
 import { isScheduledNow } from '../branch/schedule';
 import { resolveBranchStatus } from '../branch/status-checks';
+import { hasTestChecks } from '../../../../util/ci-test-detection';
 
 export type PrAutomergeBlockReason =
   | 'BranchModified'
@@ -19,7 +20,8 @@ export type PrAutomergeBlockReason =
   | 'DryRun'
   | 'PlatformNotReady'
   | 'PlatformRejection'
-  | 'off schedule';
+  | 'off schedule'
+  | 'NoTestsFound';
 
 export interface AutomergePrResult {
   automerged: boolean;
@@ -59,6 +61,23 @@ export async function checkAutoMerge(
       automerged: false,
       prAutomergeBlockReason: 'Conflicted',
     };
+  }
+  if (config.requireTestsForAutomerge && !config.ignoreTests) {
+    if (platform.getBranchStatusCheckNames) {
+      const checkNames = await platform.getBranchStatusCheckNames(branchName);
+      if (!hasTestChecks(checkNames)) {
+        logger.debug('No CI test status checks found - blocking automerge');
+        return {
+          automerged: false,
+          prAutomergeBlockReason: 'NoTestsFound',
+        };
+      }
+      logger.debug('CI test status checks found - allowing automerge to proceed');
+    } else {
+      logger.debug(
+        'Platform does not support getBranchStatusCheckNames - skipping test check requirement',
+      );
+    }
   }
   if (!ignoreTests && pr.cannotMergeReason) {
     logger.debug(

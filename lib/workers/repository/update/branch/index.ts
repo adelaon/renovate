@@ -807,7 +807,8 @@ export async function processBranch(
       if (
         mergeStatus === 'automerge aborted - PR exists' ||
         mergeStatus === 'branch status error' ||
-        mergeStatus === 'failed'
+        mergeStatus === 'failed' ||
+        mergeStatus === 'blocked - no tests found'
       ) {
         logger.debug(
           `Branch automerge not possible, mergeStatus:${mergeStatus}`,

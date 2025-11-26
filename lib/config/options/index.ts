@@ -2177,6 +2177,13 @@ const options: RenovateOptions[] = [
     default: false,
   },
   {
+    name: 'requireTestsForAutomerge',
+    description: 'Require at least one CI test status check to be present before allowing automerge.',
+    type: 'boolean',
+    default: false,
+    stage: 'branch',
+  },
+  {
     name: 'transformTemplates',
     description: 'List of jsonata transformation rules.',
     type: 'array',

@@ -67,6 +67,7 @@ export interface RenovateSharedConfig {
   ignoreDeps?: string[];
   ignorePaths?: string[];
   ignoreTests?: boolean;
+  requireTestsForAutomerge?: boolean;
   includePaths?: string[];
   internalChecksAsSuccess?: boolean;
   keepUpdatedLabel?: string;

@@ -5,6 +5,7 @@ import { platform } from '../../../../modules/platform';
 import { scm } from '../../../../modules/platform/scm';
 import { isScheduledNow } from './schedule';
 import { resolveBranchStatus } from './status-checks';
+import { hasTestChecks } from '../../../../util/ci-test-detection';
 
 export type AutomergeResult =
   | 'automerged'
@@ -14,7 +15,8 @@ export type AutomergeResult =
   | 'no automerge'
   | 'stale'
   | 'off schedule'
-  | 'not ready';
+  | 'not ready'
+  | 'blocked - no tests found';
 
 export async function tryBranchAutomerge(
   config: RenovateConfig,
@@ -32,6 +34,22 @@ export async function tryBranchAutomerge(
   );
   if (existingPr) {
     return 'automerge aborted - PR exists';
+  }
+  if (config.requireTestsForAutomerge && !config.ignoreTests) {
+    if (platform.getBranchStatusCheckNames) {
+      const checkNames = await platform.getBranchStatusCheckNames(
+        config.branchName!,
+      );
+      if (!hasTestChecks(checkNames)) {
+        logger.debug('No CI test status checks found - blocking branch automerge');
+        return 'blocked - no tests found';
+      }
+      logger.debug('CI test status checks found - allowing branch automerge to proceed');
+    } else {
+      logger.debug(
+        'Platform does not support getBranchStatusCheckNames - skipping test check requirement',
+      );
+    }
   }
   const branchStatus = await resolveBranchStatus(
     config.branchName!,

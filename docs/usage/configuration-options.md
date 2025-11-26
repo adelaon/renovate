@@ -4396,6 +4396,30 @@ Please note that Reviewers are only added during creation of a PR, but are not m
 
 ## reviewersSampleSize
 
+## requireTestsForAutomerge
+
+By default, Renovate will automerge branches/PRs if all CI checks pass (or if [`ignoreTests`](#ignoretests) is enabled). However, you may want to ensure that at least one CI test check is present before allowing automerge.
+
+Use the `requireTestsForAutomerge` option to enforce this:
+
+``` json
+{
+  "automerge": true,
+  "requireTestsForAutomerge": true
+}
+```
+
+When enabled:
+- Renovate will check if there are any test-related CI status checks or runs
+- If no test checks are found, automerge will be blocked
+- This works with both PR and branch automerge strategies
+- The check is skipped if `ignoreTests` is enabled
+- Platforms that do not support retrieving status check names will skip this check gracefully
+
+This is useful to prevent accidental automerges when CI pipelines are misconfigured or tests are accidentally skipped.
+
+**Note**: Currently supported on GitHub and GitLab. On other platforms, this option is ignored.
+
 ## rollback
 
 Add to this object if you wish to define rules that apply only to PRs that roll back versions.
