@@ -44,15 +44,40 @@ import {
   validatePrCache,
 } from './pr-fingerprint';
 import { tryReuseAutoclosedPr } from './pr-reuse';
+import { hasTestChecks } from '../../../../util/ci-test-detection';
 
-export function getPlatformPrOptions(
+export async function getPlatformPrOptions(
   config: RenovateConfig & PlatformPrOptions,
-): PlatformPrOptions {
-  const usePlatformAutomerge = Boolean(
+): Promise<PlatformPrOptions> {
+  let usePlatformAutomerge = Boolean(
     config.automerge &&
       (config.automergeType === 'pr' || config.automergeType === 'branch') &&
       config.platformAutomerge,
   );
+
+  // Only enable platform automerge if tests exist (when required)
+  if (usePlatformAutomerge && config.requireTestsForPlatformAutomerge) {
+    if (platform.getBranchStatusCheckNames && config.branchName) {
+      try {
+        const checkNames = await platform.getBranchStatusCheckNames(config.branchName);
+        if (!hasTestChecks(checkNames)) {
+          logger.debug(
+            'requireTestsForPlatformAutomerge: No CI tests found - delaying platform automerge'
+          );
+          usePlatformAutomerge = false;
+        } else {
+          logger.debug('requireTestsForPlatformAutomerge: CI tests found - enabling platform automerge');
+        }
+      } catch (err) {
+        logger.debug({ err }, 'Error checking for test status checks');
+        // On error, proceed with platform automerge anyway
+      }
+    } else {
+      logger.debug(
+        'Platform does not support getBranchStatusCheckNames - enabling platform automerge'
+      );
+    }
+  }
 
   return {
     autoApprove: !!config.autoApprove,
@@ -431,7 +456,7 @@ export async function ensurePr(
         number: existingPr.number,
         prTitle,
         prBody,
-        platformPrOptions: getPlatformPrOptions(config),
+        platformPrOptions: await getPlatformPrOptions(config),
       };
       // PR must need updating
       if (existingPr?.targetBranch !== config.baseBranch) {
@@ -535,7 +560,7 @@ export async function ensurePr(
           prTitle,
           prBody,
           labels: prepareLabels(config),
-          platformPrOptions: getPlatformPrOptions(config),
+          platformPrOptions: await getPlatformPrOptions(config),
           draftPR: !!config.draftPR,
           milestone: config.milestone,
         });
